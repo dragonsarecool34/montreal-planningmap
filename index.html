@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Montreal - Town Planning Map</title>
+    <style>
+        /* Dark theme matching Minecraft/Discord style */
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #1e1f22;
+            color: #f2f3f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #b5bac1;
+        }
+
+        /* Container to handle image presentation */
+        .map-container {
+            max-width: 100%;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #2b2d31;
+            padding: 10px;
+        }
+
+        /* Ensures the image scales down nicely on mobile screens */
+        .map-image {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Montreal Planning Map</h1>
+    <p>Official district boundaries, public works, and project zones.</p>
+
+    <div class="map-container">
+        <!-- Change 'map.jpg' to the exact filename of your image (e.g., map.png) -->
+        <img class="map-image" src="Museum_Park_1.png" alt="Montreal Town Map">
+    </div>
+
+</body>
+</html>
