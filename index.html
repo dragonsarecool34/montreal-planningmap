@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Montreal - Town Planning Map</title>
+    <title>Montreal - Interactive Planning Map</title>
+    <script src="https://unpkg.com"></script>
     <style>
-        /* Dark theme matching Minecraft/Discord style */
         body {
             margin: 0;
             padding: 20px;
@@ -15,47 +15,184 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
         }
 
-        h1 {
-            margin-bottom: 5px;
-            color: #ffffff;
-        }
+        h1 { margin-bottom: 5px; color: #ffffff; }
+        p { margin-top: 0; margin-bottom: 20px; color: #b5bac1; }
 
-        p {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #b5bac1;
-        }
-
-        /* Container to handle image presentation */
-        .map-container {
-            max-width: 100%;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        .map-viewport {
+            width: 100%;
+            max-width: 1200px;
+            height: 72vh;
             border-radius: 8px;
             overflow: hidden;
-            background-color: #2b2d31;
-            padding: 10px;
+            background-color: #111214;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 8px 24px rgba(0,0,0,0.5);
+            cursor: grab;
+            position: relative;
+        }
+        
+        .map-viewport:active { cursor: grabbing; }
+
+        #panzoom-element {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* Ensures the image scales down nicely on mobile screens */
         .map-image {
-            display: block;
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
         }
+
+        /* ─── PROJECT DETAILS POP-UP UI (MODAL) ─── */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        /* Active state to reveal the UI window */
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background-color: #2b2d31;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #35373c;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: none; border: none;
+            color: #b5bac1; font-size: 22px; cursor: pointer;
+        }
+        .modal-close:hover { color: #fff; }
+
+        .modal-title { color: #fff; margin-top: 0; font-size: 24px; }
+        .meta-group { margin-bottom: 12px; font-size: 14px; }
+        .meta-label { color: #949ba4; font-weight: bold; text-transform: uppercase; font-size: 11px; }
+        .meta-value { color: #dbdee1; margin-top: 2px; }
+        
+        /* Styled clickable map areas */
+        area { cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h1>Montreal Planning Map</h1>
-    <p>Official district boundaries, public works, and project zones.</p>
+    <h1>Montreal Interactive Map</h1>
+    <p>Scroll to zoom, drag to pan. Click highlighted districts or zones to view project details!</p>
 
-    <div class="map-container">
-        <!-- Change 'map.jpg' to the exact filename of your image (e.g., map.png) -->
-        <img class="map-image" src="Museum_Park_1.png" alt="Montreal Town Map">
+    <div class="map-viewport">
+        <div id="panzoom-element">
+            <!-- The usemap attribute connects our image to the invisible buttons below -->
+            <img id="map-img" class="map-image" src="mtlmap.png" alt="Montreal Town Map" usemap="#project-map">
+            
+            <!-- ─── THE CLICKABLE MAP OVERLAY ─── -->
+            <!-- We will map your squares inside this container -->
+            <map name="project-map">
+                <!-- Example Square: Mansion Area (coords: X1, Y1, X2, Y2 of the actual image file) -->
+                <area shape="rect" coords="200,680,360,900" alt="Mansion Project" onclick="openProject('mansion')">
+                
+                <!-- Example Square: Cathedral 1 -->
+                <area shape="rect" coords="380,240,450,380" alt="Cathedral 1" onclick="openProject('cathedral_1')">
+            </map>
+        </div>
     </div>
+
+    <!-- ─── THE POP-UP CARD FRAMEWORK ─── -->
+    <div class="modal-overlay" id="projectModal" onclick="closeModal()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h2 class="modal-title" id="ui-title">Project Name</h2>
+            
+            <div class="meta-group">
+                <div class="meta-label">Status / Timeline</div>
+                <div class="meta-value" id="ui-date">Dates here</div>
+            </div>
+            
+            <div class="meta-group">
+                <div class="meta-label">Lead Builders</div>
+                <div class="meta-value" id="ui-builders">Builders here</div>
+            </div>
+            
+            <div class="meta-group">
+                <div class="meta-label">Project Details</div>
+                <div class="meta-value" id="ui-details">Description here</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── YOUR LOCAL VARIABLE DATABASE ───
+        // You can add as many projects here as you want!
+        const PROJECT_DATA = {
+            mansion: {
+                title: "The Great Mansion",
+                date: "Started: Oct 2025 • Target Completion: Fall 2026",
+                builders: "Smurfy, Alex, and the construction team",
+                details: "A massive, multi-district residential estate featuring classic architecture, private courtyards, and automated lighting networks."
+            },
+            cathedral_1: {
+                title: "Cathedral (Phase 1)",
+                date: "Completed • Jan 2026",
+                builders: "Architecture Guild",
+                details: "The primary worship and gathering hub for the northern district. Features soaring gothic arches and custom stained-glass layout presets."
+            }
+        };
+
+        // Initialize panzoom
+        window.addEventListener('DOMContentLoaded', () => {
+            const element = document.getElementById('map-img');
+            const pz = panzoom(element, {
+                maxZoom: 5,
+                minZoom: 0.5,
+                bounds: true,
+                boundsPadding: 0.1
+            });
+        });
+
+        // ─── UI INTERACTION LOGIC ───
+        function openProject(projectId) {
+            const data = PROJECT_DATA[projectId];
+            if (!data) return;
+
+            // Inject our local variable values directly into the HTML pop-up card
+            document.getElementById('ui-title').innerText = data.title;
+            document.getElementById('ui-date').innerText = data.date;
+            document.getElementById('ui-builders').innerText = data.builders;
+            document.getElementById('ui-details').innerText = data.details;
+
+            // Make the pop-up slide/fade into view
+            document.getElementById('projectModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('projectModal').classList.remove('active');
+        }
+    </script>
 
 </body>
 </html>
