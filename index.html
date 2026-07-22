@@ -26,7 +26,7 @@
       p {
         margin-top: 0;
         margin-bottom: 20px;
-        color: #b5bac1;
+        color: #83ace6;
       }
 
       .map-viewport {
@@ -35,7 +35,7 @@
         height: 72vh;
         border-radius: 8px;
         overflow: hidden;
-        background-color: #111214;
+        background-color: #51636a;
         box-shadow:
           inset 0 0 20px rgba(0, 0, 0, 0.8),
           0 8px 24px rgba(0, 0, 0, 0.5);
@@ -85,7 +85,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.75);
+        background-color: rgba(2, 13, 12, 0.75);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -101,7 +101,7 @@
       }
 
       .modal-card {
-        background-color: #2b2d31;
+        background-color: #003f79;
         border-radius: 12px;
         width: 90%;
         max-width: 450px;
@@ -171,8 +171,30 @@
 
         <div
           class="map-hitbox"
-          style="top: 15%; left: 45%; width: 10%; height: 12%"
-          onclick="openProject('cathedral_1')"
+          style="top: 16%; left: 45.25%; width: 6.45%; height: 16.5%"
+          onclick="openProject('cathedral')"
+        ></div>
+
+        <div
+          class="map-hitbox"
+          style="top: 16%; left: 38.25%; width: 6.575%; height: 16.5%"
+          onclick="openProject('cathedral2')"
+        ></div>
+
+        <div
+          class="map-hitbox"
+          style="top: 49.5%; left: 46.5%; width: 8.75%; height: 8%"
+          onclick="openProject('museum')"
+        ></div>
+        <div
+          class="map-hitbox"
+          style="top: 60.15%; left: 46.75%; width: 8.25%; height: 7.5%"
+          onclick="openProject('shoreside')"
+        ></div>
+        <div
+          class="map-hitbox"
+          style="top: 16%; left: 52%; width: 8.5%; height: 16.5%"
+          onclick="openProject('townhall')"
         ></div>
       </div>
     </div>
@@ -182,6 +204,11 @@
       <div class="modal-card" onclick="event.stopPropagation()">
         <button class="modal-close" onclick="closeModal()">&times;</button>
         <h2 class="modal-title" id="ui-title">Project Name</h2>
+
+        <div class="meta-group">
+          <div class="meta-label">Type</div>
+          <div class="meta-value" id="ui-type">Type here</div>
+        </div>
 
         <div class="meta-group">
           <div class="meta-label">Status / Timeline</div>
@@ -204,16 +231,47 @@
       const PROJECT_DATA = {
         mansion: {
           title: "Mansion Shop",
+          type: "In Progress",
           date: "Started: May 2026 • Target Completion: September 2026",
           builders: "Philip_Amthor",
           details:
             "Mansion Shop- a multi-phase project that will eventually become Montreal's shop. First megabuild of the city.",
         },
-        cathedral_1: {
-          title: "Cathedral",
-          date: "Completed • Jan 2026",
+        cathedral: {
+          title: "Cathedral (Location 2)",
+          type: "Future Project",
+          date: "Unclaimed- Summer '26",
           builders: "Unknown",
-          details: "",
+          details: "The prioritized location for the Cathedral.",
+        },
+        cathedral2: {
+          title: "Cathedral (Location 1)",
+          type: "Future Project",
+          date: "Unclaimed- Summer '26",
+          builders: "Unknown",
+          details: "The second priority location for the Cathedral.",
+        },
+        museum: {
+          title: "Library & Museum",
+          type: "Future Project",
+          date: "Claimed- WIP",
+          builders: "Hero",
+          details: "Modernism Library & museum by Hero- 4-8 chunks.",
+        },
+        shoreside: {
+          title: "Shoreside Park",
+          type: "Public Work",
+          date: "Completed (6/28)",
+          builders: "Smurfv_",
+          details:
+            "A beautiful riverside area with rows of chairs for relaxation, a volleyball net, complete with a fountain & plaza. Solo by Smurfv_.",
+        },
+        townhall: {
+          title: "Town Hall",
+          type: "Future Project",
+          date: "TBD- 17% claimed",
+          builders: "Unknown",
+          details: "Montreal's Town Hall",
         },
       };
 
@@ -233,6 +291,7 @@
         if (!data) return;
 
         document.getElementById("ui-title").innerText = data.title;
+        document.getElementById("ui-type").innerText = data.type;
         document.getElementById("ui-date").innerText = data.date;
         document.getElementById("ui-builders").innerText = data.builders;
         document.getElementById("ui-details").innerText = data.details;
