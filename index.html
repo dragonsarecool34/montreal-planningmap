@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Montreal - Interactive Planning Map</title>
     <script src="https://unpkg.com/panzoom@9.4.3/dist/panzoom.min.js"></script>
+    <script src="https://gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
       body {
         margin: 0;
@@ -35,7 +38,7 @@
         height: 72vh;
         border-radius: 8px;
         overflow: hidden;
-        background-color: #51636a;
+        background-color: #165107;
         box-shadow:
           inset 0 0 20px rgba(0, 0, 0, 0.8),
           0 8px 24px rgba(0, 0, 0, 0.5);
@@ -111,6 +114,43 @@
         position: relative;
       }
 
+      /* Styled action icons in the top-right header */
+      .modal-actions {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .modal-btn {
+        background: none;
+        border: none;
+        color: #b5bac1;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition:
+          background-color 0.2s,
+          color 0.2s;
+        user-select: none;
+      }
+
+      /* Clear out browser-default white boxes on hover */
+      .modal-btn:hover {
+        background-color: #35373c; /* Sleek dark circle background */
+        color: #ffffff;
+      }
+
+      .modal-btn:focus {
+        outline: none;
+      }
+
       .modal-close {
         position: absolute;
         top: 15px;
@@ -177,6 +217,12 @@
 
         <div
           class="map-hitbox"
+          style="top: 28.5%; left: 67.7%; width: 1.75%; height: 21%"
+          onclick="openProject('bridge1')"
+        ></div>
+
+        <div
+          class="map-hitbox"
           style="top: 16%; left: 38.25%; width: 6.575%; height: 16.5%"
           onclick="openProject('cathedral2')"
         ></div>
@@ -202,83 +248,137 @@
     <!-- ─── THE POP-UP CARD FRAMEWORK ─── -->
     <div class="modal-overlay" id="projectModal" onclick="closeModal()">
       <div class="modal-card" onclick="event.stopPropagation()">
-        <button class="modal-close" onclick="closeModal()">&times;</button>
-        <h2 class="modal-title" id="ui-title">Project Name</h2>
+        <div class="modal-actions">
+          <!-- 1. Place your edit pencil icon right here next to the close button -->
+          <button
+            class="modal-btn"
+            onclick="toggleEditMode()"
+            title="Edit Field"
+          >
+            Edit
+          </button>
+          <button class="modal-btn" onclick="closeModal()">&times;</button>
+        </div>
 
+        <!-- Title Field Section -->
+        <h2 class="modal-title" id="ui-title">Project Name</h2>
+        <input
+          type="text"
+          id="edit-title"
+          class="edit-input"
+          style="display: none"
+        />
+
+        <!-- Type Field Section -->
         <div class="meta-group">
           <div class="meta-label">Type</div>
           <div class="meta-value" id="ui-type">Type here</div>
+          <input
+            type="text"
+            id="edit-type"
+            class="edit-input"
+            style="display: none"
+          />
         </div>
 
+        <!-- Date Field Section -->
         <div class="meta-group">
           <div class="meta-label">Status / Timeline</div>
           <div class="meta-value" id="ui-date">Dates here</div>
+          <input
+            type="text"
+            id="edit-date"
+            class="edit-input"
+            style="display: none"
+          />
         </div>
 
+        <!-- Builders Field Section -->
         <div class="meta-group">
           <div class="meta-label">Lead Builders</div>
           <div class="meta-value" id="ui-builders">Builders here</div>
+          <input
+            type="text"
+            id="edit-builders"
+            class="edit-input"
+            style="display: none"
+          />
         </div>
 
+        <!-- Details Field Section -->
         <div class="meta-group">
           <div class="meta-label">Project Details</div>
           <div class="meta-value" id="ui-details">Description here</div>
+          <!-- Note: We use a textarea for details to allow for longer multi-line text -->
+          <textarea
+            id="edit-details"
+            class="edit-input"
+            style="
+              display: none;
+              height: 80px;
+              resize: none;
+              width: 100%;
+              box-sizing: border-box;
+            "
+          ></textarea>
         </div>
+
+        <!-- The Save Button: Place this at the absolute bottom of the card -->
+        <button
+          id="ui-save-btn"
+          class="save-btn"
+          onclick="saveProjectData()"
+          style="
+            display: none;
+            background-color: #248046;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+          "
+        >
+          Save Changes
+        </button>
       </div>
     </div>
-
     <script>
-      const PROJECT_DATA = {
-        mansion: {
-          title: "Mansion Shop",
-          type: "In Progress",
-          date: "Started: May 2026 • Target Completion: September 2026",
-          builders: "Philip_Amthor",
-          details:
-            "Mansion Shop- a multi-phase project that will eventually become Montreal's shop. First megabuild of the city.",
-        },
-        cathedral: {
-          title: "Cathedral (Location 2)",
-          type: "Future Project",
-          date: "Unclaimed- Summer '26",
-          builders: "Unknown",
-          details: "The prioritized location for the Cathedral.",
-        },
-        cathedral2: {
-          title: "Cathedral (Location 1)",
-          type: "Future Project",
-          date: "Unclaimed- Summer '26",
-          builders: "Unknown",
-          details: "The second priority location for the Cathedral.",
-        },
-        museum: {
-          title: "Library & Museum",
-          type: "Future Project",
-          date: "Claimed- WIP",
-          builders: "Hero",
-          details: "Modernism Library & museum by Hero- 4-8 chunks.",
-        },
-        shoreside: {
-          title: "Shoreside Park",
-          type: "Public Work",
-          date: "Completed (6/28)",
-          builders: "Smurfv_",
-          details:
-            "A beautiful riverside area with rows of chairs for relaxation, a volleyball net, complete with a fountain & plaza. Solo by Smurfv_.",
-        },
-        townhall: {
-          title: "Town Hall",
-          type: "Future Project",
-          date: "TBD- 17% claimed",
-          builders: "Unknown",
-          details: "Montreal's Town Hall",
-        },
+      const SECRET_PASSWORD = "concordia";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCN7lAQ7QBTVW8u5-nzGi_s19788Usk6_4",
+        authDomain: "montreal-map-9d9f4.firebaseapp.com",
+        projectId: "montreal-map-9d9f4",
+        storageBucket: "montreal-map-9d9f4.firebasestorage.app",
+        messagingSenderId: "421965610143",
+        appId: "1:421965610143:web:b347b22b89cca71e4d76aa",
       };
 
-      // Initialize panzoom explicitly tracking the wrapper container
+      // Initialize Firebase Cloud Connection
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      let currentProjectId = "";
+      let isEditMode = false;
+      let globalProjectData = {}; // This empty object will hold your live cloud data rows
+
+      // ─── STEP 5: THE REAL-TIME SYNC ENGINE ───
+      // This connects to the cloud and downloads your projects instantly
+      db.collection("projects").onSnapshot((snapshot) => {
+        snapshot.forEach((doc) => {
+          globalProjectData[doc.id] = doc.data();
+        });
+        // If the info popup card is currently open, instantly update its text on screen
+        if (currentProjectId) openProject(currentProjectId);
+      });
+
+      // Initialize Panzoom
       window.addEventListener("DOMContentLoaded", () => {
         const element = document.getElementById("panzoom-element");
-        const pz = panzoom(element, {
+        panzoom(element, {
           maxZoom: 5,
           minZoom: 0.5,
           bounds: true,
@@ -287,21 +387,103 @@
       });
 
       function openProject(projectId) {
-        const data = PROJECT_DATA[projectId];
-        if (!data) return;
+        currentProjectId = projectId;
 
+        // Fallback default structure if a project doesn't exist in the cloud yet
+        const data = globalProjectData[projectId] || {
+          title: "Configuring Zone...",
+          type: "TBD",
+          date: "TBD",
+          builders: "TBD",
+          details:
+            "Click the edit pencil icon to fill out this project's information!",
+        };
+
+        // Inject display text
         document.getElementById("ui-title").innerText = data.title;
         document.getElementById("ui-type").innerText = data.type;
         document.getElementById("ui-date").innerText = data.date;
         document.getElementById("ui-builders").innerText = data.builders;
         document.getElementById("ui-details").innerText = data.details;
 
+        // Pre-fill hidden input textboxes so you don't have to re-type existing data when editing
+        document.getElementById("edit-title").value = data.title;
+        document.getElementById("edit-type").value = data.type;
+        document.getElementById("edit-date").value = data.date;
+        document.getElementById("edit-builders").value = data.builders;
+        document.getElementById("edit-details").value = data.details;
+
         document.getElementById("projectModal").classList.add("active");
       }
 
       function closeModal() {
+        exitEditMode(); // Resets input forms cleanly
         document.getElementById("projectModal").classList.remove("active");
+        currentProjectId = "";
       }
+      function toggleEditMode() {
+        if (!isEditMode) {
+          // Prompt user for management password
+          const passwordAttempt = prompt(
+            "Enter town management password to unlock editing:",
+          );
+          if (passwordAttempt !== SECRET_PASSWORD) {
+            alert("Incorrect password. Access Denied.");
+            return;
+          }
+          isEditMode = true;
+          setFormDisplayStyles("none", "block");
+        } else {
+          exitEditMode();
+        }
+      }
+
+      function saveProjectData() {
+        // Collect the text string values out of your input fields
+        const updatedData = {
+          title: document.getElementById("edit-title").value,
+          type: document.getElementById("edit-type").value,
+          date: document.getElementById("edit-date").value,
+          builders: document.getElementById("edit-builders").value,
+          details: document.getElementById("edit-details").value,
+        };
+
+        // Pushes the updated object row straight to your Firebase project collection
+        db.collection("projects")
+          .doc(currentProjectId)
+          .set(updatedData)
+          .then(() => {
+            exitEditMode();
+          })
+          .catch((error) => {
+            alert("Error saving data to the cloud: " + error.message);
+          });
+      }
+
+      function exitEditMode() {
+        isEditMode = false;
+        setFormDisplayStyles("block", "none");
+      }
+
+      function setFormDisplayStyles(viewStyle, editStyle) {
+        // Hide or show text view blocks
+        document.getElementById("ui-title").style.display = viewStyle;
+        document.getElementById("ui-type").style.display = viewStyle;
+        document.getElementById("ui-date").style.display = viewStyle;
+        document.getElementById("ui-builders").style.display = viewStyle;
+        document.getElementById("ui-details").style.display = viewStyle;
+
+        // Hide or show edit textboxes
+        document.getElementById("edit-title").style.display = editStyle;
+        document.getElementById("edit-type").style.display = editStyle;
+        document.getElementById("edit-date").style.display = editStyle;
+        document.getElementById("edit-builders").style.display = editStyle;
+        document.getElementById("edit-details").style.display = editStyle;
+        document.getElementById("ui-save-btn").style.display = editStyle;
+      }
+      // Manually expose your functions to the global window scope
+      window.toggleEditMode = toggleEditMode;
+      window.saveProjectData = saveProjectData;
     </script>
   </body>
 </html>
