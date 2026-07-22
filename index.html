@@ -1,198 +1,248 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Montreal - Interactive Planning Map</title>
-    <script src="https://unpkg.com"></script>
+    <script src="https://unpkg.com/panzoom@9.4.3/dist/panzoom.min.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: #1e1f22;
-            color: #f2f3f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            box-sizing: border-box;
-        }
+      body {
+        margin: 0;
+        padding: 20px;
+        background-color: #1e1f22;
+        color: #f2f3f5;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        box-sizing: border-box;
+      }
 
-        h1 { margin-bottom: 5px; color: #ffffff; }
-        p { margin-top: 0; margin-bottom: 20px; color: #b5bac1; }
+      h1 {
+        margin-bottom: 5px;
+        color: #ffffff;
+      }
+      p {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: #b5bac1;
+      }
 
-        .map-viewport {
-            width: 100%;
-            max-width: 1200px;
-            height: 72vh;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: #111214;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 8px 24px rgba(0,0,0,0.5);
-            cursor: grab;
-            position: relative;
-        }
-        
-        .map-viewport:active { cursor: grabbing; }
+      .map-viewport {
+        width: 100%;
+        max-width: 1200px;
+        height: 72vh;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #111214;
+        box-shadow:
+          inset 0 0 20px rgba(0, 0, 0, 0.8),
+          0 8px 24px rgba(0, 0, 0, 0.5);
+        cursor: grab;
+        position: relative;
+      }
 
-        #panzoom-element {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+      .map-viewport:active {
+        cursor: grabbing;
+      }
 
-        .map-image {
-            max-width: 95%;
-            max-height: 95%;
-            object-fit: contain;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
+      /* CRITICAL FIX: Wraps tight around your image so percentages map perfectly */
+      #panzoom-element {
+        position: relative;
+        display: inline-block;
+      }
 
-        /* ─── PROJECT DETAILS POP-UP UI (MODAL) ─── */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.75);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-        }
+      .map-image {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
 
-        /* Active state to reveal the UI window */
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+      /* ─── NEW PANZOOM COMPATIBLE HITBOXES ─── */
+      .map-hitbox {
+        position: absolute;
+        cursor: pointer;
+        border: 2px dashed rgba(255, 255, 255, 0.35); /* Visual guide box */
+        background-color: rgba(255, 255, 255, 0.03);
+        transition:
+          background-color 0.2s,
+          border-color 0.2s;
+        z-index: 10;
+      }
 
-        .modal-card {
-            background-color: #2b2d31;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 450px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #35373c;
-            position: relative;
-        }
+      .map-hitbox:hover {
+        background-color: rgba(88, 101, 242, 0.25); /* Discord Blurple */
+        border-color: rgba(88, 101, 242, 1);
+      }
 
-        .modal-close {
-            position: absolute;
-            top: 15px; right: 15px;
-            background: none; border: none;
-            color: #b5bac1; font-size: 22px; cursor: pointer;
-        }
-        .modal-close:hover { color: #fff; }
+      /* ─── PROJECT DETAILS POP-UP UI (MODAL) ─── */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.75);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
 
-        .modal-title { color: #fff; margin-top: 0; font-size: 24px; }
-        .meta-group { margin-bottom: 12px; font-size: 14px; }
-        .meta-label { color: #949ba4; font-weight: bold; text-transform: uppercase; font-size: 11px; }
-        .meta-value { color: #dbdee1; margin-top: 2px; }
-        
-        /* Styled clickable map areas */
-        area { cursor: pointer; }
+      .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .modal-card {
+        background-color: #2b2d31;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 450px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border: 1px solid #35373c;
+        position: relative;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        color: #b5bac1;
+        font-size: 22px;
+        cursor: pointer;
+      }
+      .modal-close:hover {
+        color: #fff;
+      }
+      .modal-title {
+        color: #fff;
+        margin-top: 0;
+        font-size: 24px;
+      }
+      .meta-group {
+        margin-bottom: 12px;
+        font-size: 14px;
+      }
+      .meta-label {
+        color: #949ba4;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 11px;
+      }
+      .meta-value {
+        color: #dbdee1;
+        margin-top: 2px;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <h1>Montreal Interactive Map</h1>
-    <p>Scroll to zoom, drag to pan. Click highlighted districts or zones to view project details!</p>
+    <p>
+      Scroll to zoom, drag to pan. Click highlighted districts or zones to view
+      project details!
+    </p>
 
     <div class="map-viewport">
-        <div id="panzoom-element">
-            <!-- The usemap attribute connects our image to the invisible buttons below -->
-            <img id="map-img" class="map-image" src="mtlmap.png" alt="Montreal Town Map" usemap="#project-map">
-            
-            <!-- ─── THE CLICKABLE MAP OVERLAY ─── -->
-            <!-- We will map your squares inside this container -->
-            <map name="project-map">
-                <!-- Example Square: Mansion Area (coords: X1, Y1, X2, Y2 of the actual image file) -->
-                <area shape="rect" coords="200,680,360,900" alt="Mansion Project" onclick="openProject('mansion')">
-                
-                <!-- Example Square: Cathedral 1 -->
-                <area shape="rect" coords="380,240,450,380" alt="Cathedral 1" onclick="openProject('cathedral_1')">
-            </map>
-        </div>
+      <div id="panzoom-element">
+        <img
+          id="map-img"
+          class="map-image"
+          src="mtlmap.png"
+          alt="Montreal Town Map"
+        />
+
+        <!-- ─── PROJECT HITBOX NODES ─── -->
+        <!-- Tweak these percentage values below to position them perfectly over your town regions -->
+        <div
+          class="map-hitbox"
+          style="top: 67%; left: 15.5%; width: 10%; height: 25%"
+          onclick="openProject('mansion')"
+        ></div>
+
+        <div
+          class="map-hitbox"
+          style="top: 15%; left: 45%; width: 10%; height: 12%"
+          onclick="openProject('cathedral_1')"
+        ></div>
+      </div>
     </div>
 
     <!-- ─── THE POP-UP CARD FRAMEWORK ─── -->
     <div class="modal-overlay" id="projectModal" onclick="closeModal()">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeModal()">&times;</button>
-            <h2 class="modal-title" id="ui-title">Project Name</h2>
-            
-            <div class="meta-group">
-                <div class="meta-label">Status / Timeline</div>
-                <div class="meta-value" id="ui-date">Dates here</div>
-            </div>
-            
-            <div class="meta-group">
-                <div class="meta-label">Lead Builders</div>
-                <div class="meta-value" id="ui-builders">Builders here</div>
-            </div>
-            
-            <div class="meta-group">
-                <div class="meta-label">Project Details</div>
-                <div class="meta-value" id="ui-details">Description here</div>
-            </div>
+      <div class="modal-card" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <h2 class="modal-title" id="ui-title">Project Name</h2>
+
+        <div class="meta-group">
+          <div class="meta-label">Status / Timeline</div>
+          <div class="meta-value" id="ui-date">Dates here</div>
         </div>
+
+        <div class="meta-group">
+          <div class="meta-label">Lead Builders</div>
+          <div class="meta-value" id="ui-builders">Builders here</div>
+        </div>
+
+        <div class="meta-group">
+          <div class="meta-label">Project Details</div>
+          <div class="meta-value" id="ui-details">Description here</div>
+        </div>
+      </div>
     </div>
 
     <script>
-        // ─── YOUR LOCAL VARIABLE DATABASE ───
-        // You can add as many projects here as you want!
-        const PROJECT_DATA = {
-            mansion: {
-                title: "The Great Mansion",
-                date: "Started: Oct 2025 • Target Completion: Fall 2026",
-                builders: "Smurfy, Alex, and the construction team",
-                details: "A massive, multi-district residential estate featuring classic architecture, private courtyards, and automated lighting networks."
-            },
-            cathedral_1: {
-                title: "Cathedral (Phase 1)",
-                date: "Completed • Jan 2026",
-                builders: "Architecture Guild",
-                details: "The primary worship and gathering hub for the northern district. Features soaring gothic arches and custom stained-glass layout presets."
-            }
-        };
+      const PROJECT_DATA = {
+        mansion: {
+          title: "Mansion Shop",
+          date: "Started: May 2026 • Target Completion: September 2026",
+          builders: "Philip_Amthor",
+          details:
+            "Mansion Shop- a multi-phase project that will eventually become Montreal's shop. First megabuild of the city.",
+        },
+        cathedral_1: {
+          title: "Cathedral",
+          date: "Completed • Jan 2026",
+          builders: "Unknown",
+          details: "",
+        },
+      };
 
-        // Initialize panzoom
-        window.addEventListener('DOMContentLoaded', () => {
-            const element = document.getElementById('map-img');
-            const pz = panzoom(element, {
-                maxZoom: 5,
-                minZoom: 0.5,
-                bounds: true,
-                boundsPadding: 0.1
-            });
+      // Initialize panzoom explicitly tracking the wrapper container
+      window.addEventListener("DOMContentLoaded", () => {
+        const element = document.getElementById("panzoom-element");
+        const pz = panzoom(element, {
+          maxZoom: 5,
+          minZoom: 0.5,
+          bounds: true,
+          boundsPadding: 0.1,
         });
+      });
 
-        // ─── UI INTERACTION LOGIC ───
-        function openProject(projectId) {
-            const data = PROJECT_DATA[projectId];
-            if (!data) return;
+      function openProject(projectId) {
+        const data = PROJECT_DATA[projectId];
+        if (!data) return;
 
-            // Inject our local variable values directly into the HTML pop-up card
-            document.getElementById('ui-title').innerText = data.title;
-            document.getElementById('ui-date').innerText = data.date;
-            document.getElementById('ui-builders').innerText = data.builders;
-            document.getElementById('ui-details').innerText = data.details;
+        document.getElementById("ui-title").innerText = data.title;
+        document.getElementById("ui-date").innerText = data.date;
+        document.getElementById("ui-builders").innerText = data.builders;
+        document.getElementById("ui-details").innerText = data.details;
 
-            // Make the pop-up slide/fade into view
-            document.getElementById('projectModal').classList.add('active');
-        }
+        document.getElementById("projectModal").classList.add("active");
+      }
 
-        function closeModal() {
-            document.getElementById('projectModal').classList.remove('active');
-        }
+      function closeModal() {
+        document.getElementById("projectModal").classList.remove("active");
+      }
     </script>
-
-</body>
+  </body>
 </html>
