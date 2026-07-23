@@ -11,65 +11,106 @@
     <style>
       body {
         margin: 0;
-        padding: 20px;
-        background-color: #1e1f22;
+        padding: 0;
+        background-color: #064f08;
         color: #f2f3f5;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        display: flex; /* Sets up side-by-side columns */
         height: 100vh;
+        width: 100vw;
+        overflow: hidden; /* Stops the overall page from scrolling */
         box-sizing: border-box;
       }
 
-      h1 {
-        margin-bottom: 5px;
-        color: #ffffff;
-      }
-      p {
-        margin-top: 0;
-        margin-bottom: 20px;
-        color: #83ace6;
+      /* ─── SIDEBAR COLUMN PANEL ─── */
+      .map-sidebar {
+        width: 320px;
+        min-width: 320px;
+        height: 100%;
+        background-color: #28334a; /* Discord-styled sidebar gray */
+        border-right: 1px solid #3f4248;
+        padding: 24px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        z-index: 20; /* Sits cleanly over expanding map edges */
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.3);
       }
 
+      .sidebar-title {
+        margin-top: 0;
+        margin-bottom: 5px;
+        color: #5fcb24;
+        font-size: 24px;
+      }
+
+      .sidebar-desc {
+        margin-top: 0;
+        margin-bottom: 24px;
+        color: #07e1dd;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      /* ─── FULL-SCREEN MAP VIEWPORT ─── */
+      /* ─── FULL-SCREEN MAP VIEWPORT ─── */
       .map-viewport {
-        width: 100%;
-        max-width: 1200px;
-        height: 72vh;
-        border-radius: 8px;
-        overflow: hidden;
-        background-color: #165107;
-        box-shadow:
-          inset 0 0 20px rgba(0, 0, 0, 0.8),
-          0 8px 24px rgba(0, 0, 0, 0.5);
+        flex-grow: 1;
+        height: 100%;
+        background-color: #2d4c33;
         cursor: grab;
         position: relative;
+        display: flex; /* Centers the map when page first opens */
+        justify-content: center;
+        align-items: center;
+        overflow: hidden; /* Clips expanding image edges when zooming */
       }
 
       .map-viewport:active {
         cursor: grabbing;
       }
 
-      /* CRITICAL FIX: Wraps tight around your image so percentages map perfectly */
+      /* ─── FULL-SCREEN MAP VIEWPORT ─── */
+      .map-viewport {
+        flex-grow: 1;
+        height: 100%;
+        background-color: #2d4c33;
+        cursor: grab;
+        position: relative;
+        display: flex; /* Centers the map inside the workspace */
+        justify-content: center;
+        align-items: center;
+        overflow: hidden; /* Clips out expanding boundaries when zooming */
+      }
+
+      .map-viewport:active {
+        cursor: grabbing;
+      }
+
+      /* ─── THE WRAPPER CONTAINER (The exact fix) ─── */
       #panzoom-element {
         position: relative;
-        display: inline-block;
+        display: inline-flex; /* CRITICAL: Collapses container tightly to wrap around your image width */
+        align-items: center;
+        justify-content: center;
       }
 
       .map-image {
         display: block;
-        max-width: 100%;
+        width: auto; /* Prevents the image from being artificially stretched by Flexbox width properties */
         height: auto;
+        max-width: 100%;
+        max-height: 100vh;
         user-select: none;
         -webkit-user-drag: none;
       }
 
-      /* ─── NEW PANZOOM COMPATIBLE HITBOXES ─── */
+      /* ─── PROJECT COMPATIBLE HITBOXES ─── */
       .map-hitbox {
         position: absolute;
         cursor: pointer;
         border: 2px dashed rgba(255, 255, 255, 0.35); /* Visual guide box */
-        background-color: rgba(255, 255, 255, 0.03);
+        background-color: rgba(0, 64, 255, 0.296);
         transition:
           background-color 0.2s,
           border-color 0.2s;
@@ -77,41 +118,8 @@
       }
 
       .map-hitbox:hover {
-        background-color: rgba(88, 101, 242, 0.25); /* Discord Blurple */
-        border-color: rgba(88, 101, 242, 1);
-      }
-
-      /* ─── PROJECT DETAILS POP-UP UI (MODAL) ─── */
-      .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(2, 13, 12, 0.75);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease;
-      }
-
-      .modal-overlay.active {
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      .modal-card {
-        background-color: #003f79;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 450px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        border: 1px solid #35373c;
-        position: relative;
+        background-color: rgba(88, 101, 242, 0.033); /* Discord Blurple */
+        border-color: rgba(88, 101, 242, 0.045);
       }
 
       /* Styled action icons in the top-right header */
@@ -141,9 +149,8 @@
         user-select: none;
       }
 
-      /* Clear out browser-default white boxes on hover */
       .modal-btn:hover {
-        background-color: #35373c; /* Sleek dark circle background */
+        background-color: #35373c;
         color: #ffffff;
       }
 
@@ -151,23 +158,44 @@
         outline: none;
       }
 
-      .modal-close {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: none;
-        border: none;
-        color: #b5bac1;
-        font-size: 22px;
-        cursor: pointer;
+      /* ─── PROJECT DETAILS POP-UP UI (MODAL) ─── */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(37, 63, 29, 0.75);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
       }
-      .modal-close:hover {
-        color: #fff;
+
+      .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
       }
+
+      .modal-card {
+        background-color: #2b2d31;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 450px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border: 1px solid #35373c;
+        position: relative;
+      }
+
       .modal-title {
         color: #fff;
         margin-top: 0;
         font-size: 24px;
+        margin-right: 50px;
       }
       .meta-group {
         margin-bottom: 12px;
@@ -183,15 +211,59 @@
         color: #dbdee1;
         margin-top: 2px;
       }
+
+      .edit-input {
+        width: 100%;
+        background-color: #1e1f22;
+        border: 1px solid #383a40;
+        color: #dbdee1;
+        border-radius: 4px;
+        padding: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+        margin-top: 4px;
+        display: none;
+      }
+      textarea.edit-input {
+        height: 80px;
+        resize: none;
+        font-family: inherit;
+      }
+
+      .save-btn {
+        background-color: #248046;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        display: none;
+        margin-top: 15px;
+        width: 100%;
+      }
+      .save-btn:hover {
+        background-color: #1a6535;
+      }
     </style>
   </head>
   <body>
-    <h1>Montreal Interactive Map</h1>
-    <p>
-      Scroll to zoom, drag to pan. Click highlighted districts or zones to view
-      project details!
-    </p>
+    <!-- 1. The clean sidebar panel (This is now your ONE and ONLY main title holder) -->
+    <div class="map-sidebar">
+      <h1 class="sidebar-title">Montreal Map</h1>
+      <p class="sidebar-desc">
+        Scroll to zoom, drag to pan. Click zones to view project details or
+        modify town data entries.
+      </p>
 
+      <!-- FUTURE CONTAINER: Left empty for your upcoming town warps and management buttons -->
+      <div
+        id="sidebar-controls"
+        style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px"
+      ></div>
+    </div>
+
+    <!-- 2. The full-bleed map viewport (Notice there are NO extra titles floating out here anymore) -->
     <div class="map-viewport">
       <div id="panzoom-element">
         <img
@@ -201,8 +273,6 @@
           alt="Montreal Town Map"
         />
 
-        <!-- ─── PROJECT HITBOX NODES ─── -->
-        <!-- Tweak these percentage values below to position them perfectly over your town regions -->
         <div
           class="map-hitbox"
           style="top: 67%; left: 15.5%; width: 10%; height: 25%"
@@ -255,7 +325,7 @@
             onclick="toggleEditMode()"
             title="Edit Field"
           >
-            Edit
+            ✏️
           </button>
           <button class="modal-btn" onclick="closeModal()">&times;</button>
         </div>
