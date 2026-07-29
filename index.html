@@ -52,6 +52,124 @@
         line-height: 1.4;
       }
 
+      /* Collapsible Accordion Container */
+      .sidebar-accordion {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      /* Accordion Summary Header */
+      .accordion-header {
+        padding: 10px 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+        color: #fff;
+      }
+
+      .accordion-header::-webkit-details-marker {
+        display: none; /* Hide default native arrow */
+      }
+
+      /* Container padding */
+      .quick-nav-container {
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      /* Search Bar Input */
+      .sidebar-search-input {
+        width: 100%;
+        padding: 6px 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: #fff;
+        font-size: 0.85rem;
+        outline: none;
+        box-sizing: border-box;
+      }
+
+      .sidebar-search-input:focus {
+        border-color: #4f46e5; /* Highlight highlight color */
+      }
+
+      /* Make the list scrollable */
+      .project-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 220px; /* Adjust height limit as needed */
+        overflow-y: auto; /* Enables vertical scrolling */
+      }
+
+      /* Custom Sleek Scrollbar */
+      .project-list::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .project-list::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+      }
+
+      .project-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+      }
+
+      .project-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      /* Rotate indicator arrow when opened */
+      .sidebar-accordion[open] .chevron {
+        transform: rotate(180deg);
+      }
+
+      .chevron {
+        font-size: 0.75rem;
+        transition: transform 0.2s ease;
+        color: #888;
+      }
+
+      /* List Items */
+      .project-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .project-item {
+        padding: 8px 14px;
+        cursor: pointer;
+        color: #d1d5db;
+        font-size: 0.9rem;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+
+      .project-item:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+      }
+
+      .loading-item,
+      .empty-item {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        color: #888;
+        font-style: italic;
+      }
       /* ─── FULL-SCREEN MAP VIEWPORT ─── */
       /* ─── FULL-SCREEN MAP VIEWPORT ─── */
       .map-viewport {
@@ -66,21 +184,61 @@
         overflow: hidden; /* Clips expanding image edges when zooming */
       }
 
-      .map-viewport:active {
-        cursor: grabbing;
+      .edit-mode .map-hitbox {
+        border: 2px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.25);
+        cursor: move;
       }
 
-      /* ─── FULL-SCREEN MAP VIEWPORT ─── */
-      .map-viewport {
-        flex-grow: 1;
-        height: 100%;
-        background-color: #2d4c33;
-        cursor: grab;
-        position: relative;
-        display: flex; /* Centers the map inside the workspace */
-        justify-content: center;
-        align-items: center;
-        overflow: hidden; /* Clips out expanding boundaries when zooming */
+      /* Hitbox style during edit mode */
+      .box-edit-mode .map-hitbox {
+        border: 2px dashed #3b82f6 !important;
+        background: rgba(59, 130, 246, 0.25) !important;
+        cursor: move;
+        box-sizing: border-box;
+      }
+
+      /* Resize Handle (Bottom-Right Corner) */
+      .resize-handle {
+        display: none;
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        right: -7px;
+        bottom: -7px;
+        background: #3b82f6;
+        border: 2px solid #ffffff;
+        border-radius: 3px;
+        cursor: se-resize;
+        z-index: 20;
+      }
+
+      .box-edit-mode .resize-handle {
+        display: block;
+      }
+
+      /* Bottom-right resize handle */
+      .resize-handle {
+        display: none;
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        right: -6px;
+        bottom: -6px;
+        background: #3b82f6;
+        border: 1px solid #fff;
+        cursor: se-resize;
+        border-radius: 2px;
+      }
+
+      .edit-mode .resize-handle {
+        display: block;
+      }
+
+      .edit-help-text {
+        font-size: 0.75rem;
+        color: #aaa;
+        margin-top: 8px;
       }
 
       .map-viewport:active {
@@ -109,8 +267,8 @@
       .map-hitbox {
         position: absolute;
         cursor: pointer;
-        border: 2px dashed rgba(255, 255, 255, 0.35); /* Visual guide box */
-        background-color: rgba(0, 64, 255, 0.296);
+        border: 25px rgba(112, 122, 111, 0.828); /* Visual guide box */
+        background-color: rgba(0, 64, 255, 0.034);
         transition:
           background-color 0.2s,
           border-color 0.2s;
@@ -118,7 +276,7 @@
       }
 
       .map-hitbox:hover {
-        background-color: rgba(88, 101, 242, 0.033); /* Discord Blurple */
+        background-color: rgba(44, 52, 143, 0.425); /* Discord Blurple */
         border-color: rgba(88, 101, 242, 0.045);
       }
 
@@ -150,7 +308,7 @@
       }
 
       .modal-btn:hover {
-        background-color: #35373c;
+        background-color: #434853;
         color: #ffffff;
       }
 
@@ -248,7 +406,7 @@
     </style>
   </head>
   <body>
-    <!-- 1. The clean sidebar panel (This is now your ONE and ONLY main title holder) -->
+    <!-- 1. The clean sidebar panel -->
     <div class="map-sidebar">
       <h1 class="sidebar-title">Montreal Map</h1>
       <p class="sidebar-desc">
@@ -256,14 +414,56 @@
         modify town data entries.
       </p>
 
-      <!-- FUTURE CONTAINER: Left empty for your upcoming town warps and management buttons -->
+      <!-- FUTURE CONTAINER: Beta -->
       <div
         id="sidebar-controls"
         style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px"
-      ></div>
+      >
+        <details class="sidebar-accordion" open>
+          <summary class="accordion-header">
+            <span>📍 Quick Navigation</span>
+            <span class="chevron">▼</span>
+          </summary>
+
+          <div class="quick-nav-container">
+            <input
+              type="text"
+              id="project-search"
+              class="sidebar-search-input"
+              placeholder="Search projects or zones..."
+              oninput="filterQuickJumpList()"
+            />
+
+            <ul id="quick-jump-list" class="project-list">
+              <li class="loading-item">Loading projects...</li>
+            </ul>
+          </div>
+        </details>
+        <div class="sidebar-section">
+          <button
+            id="edit-mode-btn"
+            onclick="toggleBoxEditMode()"
+            class="btn-primary"
+          >
+            ✏️ Toggle Edit Mode
+          </button>
+
+          <div id="editor-tools" style="display: none; margin-top: 10px">
+            <button onclick="createNewBox()" class="btn-success">
+              + Add New Zone
+            </button>
+            <button onclick="exportZonesJSON()" class="btn-secondary">
+              📋 Log Zone Percentages
+            </button>
+            <p class="edit-help-text">
+              Drag boxes to move. Drag bottom-right corner to resize.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- 2. The full-bleed map viewport (Notice there are NO extra titles floating out here anymore) -->
+    <!-- 2. The full-bleed map viewport -->
     <div class="map-viewport">
       <div id="panzoom-element">
         <img
@@ -443,6 +643,7 @@
         });
         // If the info popup card is currently open, instantly update its text on screen
         if (currentProjectId) openProject(currentProjectId);
+        renderQuickJumpList();
       });
 
       // Initialize Panzoom
@@ -459,7 +660,11 @@
       function openProject(projectId) {
         currentProjectId = projectId;
 
-        // Fallback default structure if a project doesn't exist in the cloud yet
+        // 1. Force modal edit mode OFF when opening a project card
+        isModalEditMode = false;
+        setFormDisplayStyles("block", "none"); // Show text labels, hide input boxes
+
+        // 2. Fetch data (fallback or cloud)
         const data = globalProjectData[projectId] || {
           title: "Configuring Zone...",
           type: "TBD",
@@ -469,13 +674,15 @@
             "Click the edit pencil icon to fill out this project's information!",
         };
 
-        // Inject display text
+        // 3. Inject display text
         document.getElementById("ui-title").innerText = data.title;
         document.getElementById("ui-type").innerText = data.type;
         document.getElementById("ui-date").innerText = data.date;
         document.getElementById("ui-builders").innerText = data.builders;
         document.getElementById("ui-details").innerText = data.details;
 
+        // Show the modal
+        document.getElementById("project-modal").style.display = "block";
         // Pre-fill hidden input textboxes so you don't have to re-type existing data when editing
         document.getElementById("edit-title").value = data.title;
         document.getElementById("edit-type").value = data.type;
@@ -486,18 +693,112 @@
         document.getElementById("projectModal").classList.add("active");
       }
 
+      let activeElement = null;
+      let isResizing = false;
+      let startX = 0,
+        startY = 0;
+      let startLeft = 0,
+        startTop = 0,
+        startWidth = 0,
+        startHeight = 0;
+
+      // Attach handle elements to all current hitboxes
+      function attachEditHandles() {
+        document.querySelectorAll(".map-hitbox").forEach((box) => {
+          // Add handle if not already created
+          if (!box.querySelector(".resize-handle")) {
+            const handle = document.createElement("div");
+            handle.className = "resize-handle";
+            box.appendChild(handle);
+          }
+
+          // Remove existing listener before adding to avoid duplicate bindings
+          box.removeEventListener("mousedown", initDragOrResize);
+          box.addEventListener("mousedown", initDragOrResize);
+        });
+      }
+
+      function initDragOrResize(e) {
+        if (!isBoxEditMode) return;
+
+        // Prevent panzoom from panning the map while moving/resizing a box
+        e.stopPropagation();
+        e.preventDefault();
+
+        activeElement = e.currentTarget;
+        isResizing = e.target.classList.contains("resize-handle");
+
+        // Track initial mouse screen position
+        startX = e.clientX;
+        startY = e.clientY;
+
+        // Read current style values (fallback to 0 if missing)
+        startLeft = parseFloat(activeElement.style.left) || 0;
+        startTop = parseFloat(activeElement.style.top) || 0;
+        startWidth = parseFloat(activeElement.style.width) || 5;
+        startHeight = parseFloat(activeElement.style.height) || 5;
+
+        document.addEventListener("mousemove", doDragOrResize);
+        document.addEventListener("mouseup", stopDragOrResize);
+      }
+
+      function doDragOrResize(e) {
+        if (!activeElement) return;
+
+        const container = document.getElementById("panzoom-element");
+
+        // Get scale factor if Panzoom has applied transform: scale(...)
+        const rect = container.getBoundingClientRect();
+        const currentScale = rect.width / container.offsetWidth || 1;
+
+        // Real pixel delta accounting for current zoom scale
+        const dx = (e.clientX - startX) / currentScale;
+        const dy = (e.clientY - startY) / currentScale;
+
+        // Convert pixel delta into percentage relative to container width/height
+        const deltaPctX = (dx / container.offsetWidth) * 100;
+        const deltaPctY = (dy / container.offsetHeight) * 100;
+
+        if (isResizing) {
+          const newW = Math.max(1, startWidth + deltaPctX);
+          const newH = Math.max(1, startHeight + deltaPctY);
+
+          activeElement.style.width = `${newW.toFixed(2)}%`;
+          activeElement.style.height = `${newH.toFixed(2)}%`;
+        } else {
+          const newL = Math.max(0, startLeft + deltaPctX);
+          const newT = Math.max(0, startTop + deltaPctY);
+
+          activeElement.style.left = `${newL.toFixed(2)}%`;
+          activeElement.style.top = `${newT.toFixed(2)}%`;
+        }
+      }
+
+      function stopDragOrResize() {
+        document.removeEventListener("mousemove", doDragOrResize);
+        document.removeEventListener("mouseup", stopDragOrResize);
+        activeElement = null;
+      }
+
       function closeModal() {
         exitEditMode(); // Resets input forms cleanly
         document.getElementById("projectModal").classList.remove("active");
         currentProjectId = "";
       }
+      let isBoxEditMode = false;
+
+      // Helper to check authentication
+      function checkPassword() {
+        const passwordAttempt = prompt(
+          "Enter town management password to unlock editing:",
+        );
+        return passwordAttempt === SECRET_PASSWORD;
+      }
+
+      // Your existing toggleEditMode (for text details)
       function toggleEditMode() {
         if (!isEditMode) {
-          // Prompt user for management password
-          const passwordAttempt = prompt(
-            "Enter town management password to unlock editing:",
-          );
-          if (passwordAttempt !== SECRET_PASSWORD) {
+          if (!checkPassword()) {
             alert("Incorrect password. Access Denied.");
             return;
           }
@@ -505,6 +806,33 @@
           setFormDisplayStyles("none", "block");
         } else {
           exitEditMode();
+        }
+      }
+
+      // New dedicated toggle for Spatial/Hitbox Editing
+      function toggleBoxEditMode() {
+        const container = document.getElementById("panzoom-element");
+        const tools = document.getElementById("editor-tools");
+        const btn = document.getElementById("box-edit-btn");
+
+        if (!isBoxEditMode) {
+          // Prompt password if not already unlocked in text edit mode
+          if (!isEditMode && !checkPassword()) {
+            alert("Incorrect password. Access Denied.");
+            return;
+          }
+
+          isBoxEditMode = true;
+          container.classList.add("box-edit-mode");
+          if (tools) tools.style.display = "block";
+          if (btn) btn.innerText = "🔒 Lock Layout";
+
+          attachEditHandles(); // Attaches drag & resize listeners
+        } else {
+          isBoxEditMode = false;
+          container.classList.remove("box-edit-mode");
+          if (tools) tools.style.display = "none";
+          if (btn) btn.innerText = "🗺️ Edit Map Layout";
         }
       }
 
@@ -534,6 +862,56 @@
         isEditMode = false;
         setFormDisplayStyles("block", "none");
       }
+
+      // Function to generate the quick jump menu from globalProjectData
+      function renderQuickJumpList() {
+        filterQuickJumpList(); // Simply delegate to the filter renderer
+      }
+
+      function filterQuickJumpList() {
+        const listContainer = document.getElementById("quick-jump-list");
+        const searchInput = document.getElementById("project-search");
+        if (!listContainer) return;
+
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+        listContainer.innerHTML = "";
+
+        const projectIds = Object.keys(globalProjectData);
+
+        if (projectIds.length === 0) {
+          listContainer.innerHTML =
+            '<li class="empty-item">No projects found.</li>';
+          return;
+        }
+
+        // Filter projects by matching their title or key ID to search query
+        const matchingIds = projectIds.filter((id) => {
+          const project = globalProjectData[id];
+          const titleText = (project.title || id).toLowerCase();
+          return titleText.includes(query) || id.toLowerCase().includes(query);
+        });
+
+        if (matchingIds.length === 0) {
+          listContainer.innerHTML =
+            '<li class="empty-item">No matching zones found.</li>';
+          return;
+        }
+
+        // Build the filtered list
+        matchingIds.forEach((id) => {
+          const project = globalProjectData[id];
+          const li = document.createElement("li");
+          li.className = "project-item";
+
+          const titleText = project.title || id;
+          li.innerHTML = `<span>${titleText}</span>`;
+
+          li.onclick = () => openProject(id);
+          listContainer.appendChild(li);
+        });
+      }
+      // EXAMPLE INTEGRATION WITH FIREBASE:
+      // Call renderQuickJumpList() whenever your Firebase data listener triggers!
 
       function setFormDisplayStyles(viewStyle, editStyle) {
         // Hide or show text view blocks
