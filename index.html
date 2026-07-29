@@ -190,14 +190,6 @@
         cursor: move;
       }
 
-      /* Hitbox style during edit mode */
-      .box-edit-mode .map-hitbox {
-        border: 2px dashed #3b82f6 !important;
-        background: rgba(59, 130, 246, 0.25) !important;
-        cursor: move;
-        box-sizing: border-box;
-      }
-
       /* Resize Handle (Bottom-Right Corner) */
       .resize-handle {
         display: none;
@@ -264,20 +256,70 @@
       }
 
       /* ─── PROJECT COMPATIBLE HITBOXES ─── */
+      /* Base Map Hitbox / Overlay Tile */
+      /* Base Map Hitbox / Tile Styling */
+      /* Base Map Hitbox - Completely Transparent so terrain shows through */
       .map-hitbox {
         position: absolute;
+        background: transparent !important; /* 👈 Transparent backdrop keeps map visible */
+        border: 2px solid rgba(56, 189, 248, 0.85); /* Clean cyan outline */
+        border-radius: 6px;
+        box-sizing: border-box;
         cursor: pointer;
-        border: 25px rgba(112, 122, 111, 0.828); /* Visual guide box */
-        background-color: rgba(0, 64, 255, 0.034);
-        transition:
-          background-color 0.2s,
-          border-color 0.2s;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+
+        transition: all 0.2s ease-in-out;
+        z-index: 5;
+      }
+
+      /* Hover Effect - Subtle tint only on hover */
+      .map-hitbox:hover {
+        background: rgba(
+          56,
+          189,
+          248,
+          0.2
+        ) !important; /* Soft highlight fill */
+        border-color: #38bdf8;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
         z-index: 10;
       }
 
-      .map-hitbox:hover {
-        background-color: rgba(44, 52, 143, 0.425); /* Discord Blurple */
-        border-color: rgba(88, 101, 242, 0.045);
+      /* Label text remains crisp over raw terrain */
+      .hitbox-label {
+        color: #fafafa;
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        font-size: 11px;
+        font-weight: 550;
+        text-align: center;
+
+        line-height: 1.2;
+        user-select: none;
+        pointer-events: none;
+      }
+      .hitbox-label.vertical-text {
+        writing-mode: vertical-lr;
+        text-orientation: upright;
+        letter-spacing: 2px;
+      }
+
+      /* Rotated Text Option (Rotates horizontal text 90 degrees) */
+      .hitbox-label.rotated-text {
+        transform: rotate(-90deg);
+        white-space: nowrap;
+      }
+
+      /* Keep box handles visible above tile text when editing */
+      .box-edit-mode .map-hitbox {
+        border: 2px dashed #f59e0b !important; /* Amber color while editing */
       }
 
       /* Styled action icons in the top-right header */
@@ -403,6 +445,56 @@
       .save-btn:hover {
         background-color: #1a6535;
       }
+      /* Sleek styling for the Edit Mode Button */
+      #edit-mode-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+        padding: 8px 16px;
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #e2e8f0; /* Crisp off-white text */
+
+        /* Dark Slate Glassmorphism Background */
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 8px;
+        cursor: pointer;
+
+        /* Smooth hover transitions */
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(4px);
+      }
+
+      /* Hover State - Soft Sky Blue Glow */
+      #edit-mode-btn:hover {
+        background: rgba(51, 65, 85, 0.95);
+        border-color: #38bdf8;
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+        transform: translateY(-1px);
+      }
+
+      /* Click State */
+      #edit-mode-btn:active {
+        transform: translateY(0);
+      }
+
+      /* Toggled ON Active State (Glowing Amber) */
+      #edit-mode-btn.active {
+        background: rgba(245, 158, 11, 0.2) !important;
+        border-color: #fbbf24 !important;
+        color: #fbbf24 !important;
+        box-shadow: 0 0 12px rgba(251, 191, 36, 0.4) !important;
+      }
     </style>
   </head>
   <body>
@@ -451,9 +543,6 @@
           <div id="editor-tools" style="display: none; margin-top: 10px">
             <button onclick="createNewBox()" class="btn-success">
               + Add New Zone
-            </button>
-            <button onclick="exportZonesJSON()" class="btn-secondary">
-              📋 Log Zone Percentages
             </button>
             <p class="edit-help-text">
               Drag boxes to move. Drag bottom-right corner to resize.
@@ -627,6 +716,86 @@
         appId: "1:421965610143:web:b347b22b89cca71e4d76aa",
       };
 
+      const initialProjectZones = {
+        mansion: {
+          title: "Mansion",
+          type: "Large Housing",
+          date: "In Progress", // 👈 Added Status/Timeline
+          builders: "Montreal BuilderForce",
+          details: "Residential zone build.",
+          top: "67%",
+          left: "15.5%",
+          width: "10%",
+          height: "25%",
+        },
+        cathedral: {
+          title: "Cathedral (1)",
+          type: "Future Project",
+          date: "Unclaimed", // 👈 Added Status/Timeline
+          builders: "Montreal BuilderForce",
+          details: "Main cathedral framing.",
+          top: "16%",
+          left: "45.25%",
+          width: "6.45%",
+          height: "16.5%",
+        },
+        bridge1: {
+          title: "Bridge 1",
+          type: "Public Works",
+          date: "Completed",
+          builders: "Montreal BuilderForce",
+          details: "Main river crossing.",
+          top: "28.5%",
+          left: "67.7%",
+          width: "1.75%",
+          height: "21%",
+        },
+        cathedral2: {
+          title: "Cathedral (2)",
+          type: "Future Project",
+          date: "Unclaimed",
+          builders: "Montreal BuilderForce",
+          details: "Secondary cathedral structure.",
+          top: "16%",
+          left: "38.25%",
+          width: "6.575%",
+          height: "16.5%",
+        },
+        museum: {
+          title: "Museum",
+          type: "Public Works",
+          date: "Planning",
+          builders: "Montreal BuilderForce",
+          details: "Town artifact display.",
+          top: "49.5%",
+          left: "46.5%",
+          width: "8.75%",
+          height: "8%",
+        },
+        shoreside: {
+          title: "Shoreside Park",
+          type: "Public Works",
+          date: "Completed",
+          builders: "Montreal BuilderForce",
+          details: "Park area.",
+          top: "60.15%",
+          left: "46.75%",
+          width: "8.25%",
+          height: "7.5%",
+        },
+        townhall: {
+          title: "Town Hall",
+          type: "Public Works",
+          date: "In Progress",
+          builders: "Montreal BuilderForce",
+          details: "Administrative building.",
+          top: "16%",
+          left: "52%",
+          width: "8.5%",
+          height: "16.5%",
+        },
+      };
+
       // Initialize Firebase Cloud Connection
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
@@ -638,12 +807,14 @@
       // ─── STEP 5: THE REAL-TIME SYNC ENGINE ───
       // This connects to the cloud and downloads your projects instantly
       db.collection("projects").onSnapshot((snapshot) => {
+        globalProjectData = {};
         snapshot.forEach((doc) => {
           globalProjectData[doc.id] = doc.data();
         });
-        // If the info popup card is currently open, instantly update its text on screen
-        if (currentProjectId) openProject(currentProjectId);
+
+        // Refresh both the sidebar list and the map boxes!
         renderQuickJumpList();
+        renderMapHitboxes();
       });
 
       // Initialize Panzoom
@@ -658,11 +829,16 @@
       });
 
       function openProject(projectId) {
+        // Guard clause: ignore project clicks while dragging/resizing hitboxes
+        if (typeof isBoxEditMode !== "undefined" && isBoxEditMode) return;
+
         currentProjectId = projectId;
 
-        // 1. Force modal edit mode OFF when opening a project card
+        // 1. Force modal edit mode OFF when opening
         isModalEditMode = false;
-        setFormDisplayStyles("block", "none"); // Show text labels, hide input boxes
+        if (typeof setFormDisplayStyles === "function") {
+          setFormDisplayStyles("block", "none"); // Show text labels, hide input boxes
+        }
 
         // 2. Fetch data (fallback or cloud)
         const data = globalProjectData[projectId] || {
@@ -674,23 +850,42 @@
             "Click the edit pencil icon to fill out this project's information!",
         };
 
+        // Helper for safe text injection
+        const setInnerText = (id, text) => {
+          const el = document.getElementById(id);
+          if (el) el.innerText = text;
+        };
+
+        const setValue = (id, text) => {
+          const el = document.getElementById(id);
+          if (el) el.value = text;
+        };
+
         // 3. Inject display text
-        document.getElementById("ui-title").innerText = data.title;
-        document.getElementById("ui-type").innerText = data.type;
-        document.getElementById("ui-date").innerText = data.date;
-        document.getElementById("ui-builders").innerText = data.builders;
-        document.getElementById("ui-details").innerText = data.details;
+        setInnerText("ui-title", data.title || projectId);
+        setInnerText("ui-type", data.type || "TBD");
+        setInnerText("ui-date", data.date || "TBD");
+        setInnerText("ui-builders", data.builders || "TBD");
+        setInnerText("ui-details", data.details || "TBD");
 
-        // Show the modal
-        document.getElementById("project-modal").style.display = "block";
-        // Pre-fill hidden input textboxes so you don't have to re-type existing data when editing
-        document.getElementById("edit-title").value = data.title;
-        document.getElementById("edit-type").value = data.type;
-        document.getElementById("edit-date").value = data.date;
-        document.getElementById("edit-builders").value = data.builders;
-        document.getElementById("edit-details").value = data.details;
+        // 4. Pre-fill hidden edit textboxes
+        setValue("edit-title", data.title || "");
+        setValue("edit-type", data.type || "");
+        setValue("edit-date", data.date || "");
+        setValue("edit-builders", data.builders || "");
+        setValue("edit-details", data.details || "");
 
-        document.getElementById("projectModal").classList.add("active");
+        // 5. Open Modal safely (handles both ID styles)
+        // 5. Open Modal safely
+        const modal =
+          document.getElementById("projectModal") ||
+          document.getElementById("project-modal");
+
+        if (modal) {
+          // Use flex to keep it centered (or grid, depending on your CSS)
+          modal.style.display = "flex";
+          modal.classList.add("active");
+        }
       }
 
       let activeElement = null;
@@ -775,9 +970,55 @@
       }
 
       function stopDragOrResize() {
+        if (activeElement && isBoxEditMode) {
+          // Get project ID stored on the element (e.g., data-id="mansion")
+          const projectId = activeElement.dataset.id || currentProjectId;
+
+          if (projectId && typeof db !== "undefined") {
+            const updatedCoordinates = {
+              top: activeElement.style.top,
+              left: activeElement.style.left,
+              width: activeElement.style.width,
+              height: activeElement.style.height,
+            };
+
+            // Save updated position directly to Firebase Firestore
+            db.collection("projects")
+              .doc(projectId)
+              .set(updatedCoordinates, { merge: true })
+              .then(() =>
+                console.log(
+                  `Successfully saved new coordinates for ${projectId}`,
+                ),
+              )
+              .catch((err) => console.error("Firebase save error:", err));
+          }
+        }
+
+        // Clean up listeners
         document.removeEventListener("mousemove", doDragOrResize);
         document.removeEventListener("mouseup", stopDragOrResize);
         activeElement = null;
+      }
+
+      // Run this function ONCE to push initialProjectZones up to Firebase!
+      function seedInitialZonesToFirebase() {
+        if (typeof db === "undefined") {
+          alert("Firebase 'db' object is not initialized yet!");
+          return;
+        }
+
+        const projectIds = Object.keys(initialProjectZones);
+
+        projectIds.forEach((id) => {
+          db.collection("projects")
+            .doc(id)
+            .set(initialProjectZones[id], { merge: true })
+            .then(() => console.log(`Seeded ${id} to Firebase`))
+            .catch((err) => console.error(`Failed to seed ${id}:`, err));
+        });
+
+        alert("Successfully seeded initial project zones to Firebase!");
       }
 
       function closeModal() {
@@ -868,6 +1109,56 @@
         filterQuickJumpList(); // Simply delegate to the filter renderer
       }
 
+      function createNewBox() {
+        if (typeof db === "undefined") {
+          alert("Firebase database connection is not ready!");
+          return;
+        }
+
+        // 1. Prompt user for a unique project/zone ID
+        const rawId = prompt(
+          "Enter a unique ID for this new zone (e.g. 'dock', 'market', 'farm'):",
+        );
+        if (!rawId) return; // User cancelled
+
+        // Clean the ID (lowercase, no spaces)
+        const zoneId = rawId.toLowerCase().trim().replace(/\s+/g, "_");
+
+        if (globalProjectData[zoneId]) {
+          alert(
+            `A project with the ID '${zoneId}' already exists! Please pick a different name.`,
+          );
+          return;
+        }
+
+        // 2. Default configuration for a new zone
+        const newZoneData = {
+          title: rawId.trim(),
+          type: "Future Project",
+          date: "Planning",
+          builders: "Unassigned",
+          details:
+            "Click the edit pencil icon to fill out details for this new project!",
+          top: "40%",
+          left: "40%",
+          width: "10%",
+          height: "10%",
+        };
+
+        // 3. Save directly to Firebase Firestore
+        db.collection("projects")
+          .doc(zoneId)
+          .set(newZoneData)
+          .then(() => {
+            console.log(`✅ Zone '${zoneId}' created in Firebase!`);
+            // Note: onSnapshot will auto-trigger renderMapHitboxes() & renderQuickJumpList()
+          })
+          .catch((err) => {
+            console.error("Error creating new zone:", err);
+            alert("Failed to save new zone to database: " + err.message);
+          });
+      }
+
       function filterQuickJumpList() {
         const listContainer = document.getElementById("quick-jump-list");
         const searchInput = document.getElementById("project-search");
@@ -912,6 +1203,47 @@
       }
       // EXAMPLE INTEGRATION WITH FIREBASE:
       // Call renderQuickJumpList() whenever your Firebase data listener triggers!
+
+      // Render all map hitboxes dynamically from Firebase data
+      function renderMapHitboxes() {
+        const container = document.getElementById("panzoom-element");
+        if (!container) return;
+
+        // Clear existing hitboxes
+        document.querySelectorAll(".map-hitbox").forEach((el) => el.remove());
+
+        // Loop through all project zones in global memory
+        Object.keys(globalProjectData).forEach((id) => {
+          const data = globalProjectData[id];
+
+          if (data.top && data.left && data.width && data.height) {
+            const box = document.createElement("div");
+            box.className = "map-hitbox";
+            box.dataset.id = id;
+
+            box.style.top = data.top;
+            box.style.left = data.left;
+            box.style.width = data.width;
+            box.style.height = data.height;
+
+            // 1. Create and attach the text label inside the box
+            const label = document.createElement("span");
+            label.className = "hitbox-label";
+            label.innerText = data.title || id;
+            box.appendChild(label);
+
+            // 2. Click action to open project card
+            box.onclick = () => openProject(id);
+
+            container.appendChild(box);
+          }
+        });
+
+        // Re-attach edit handle nodes if edit mode is toggled on
+        if (typeof isBoxEditMode !== "undefined" && isBoxEditMode) {
+          attachEditHandles();
+        }
+      }
 
       function setFormDisplayStyles(viewStyle, editStyle) {
         // Hide or show text view blocks
